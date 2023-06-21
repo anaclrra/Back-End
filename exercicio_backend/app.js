@@ -2,11 +2,15 @@ const express = require('express');
 const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const crypto = require('crypto');
+
 const bodyParser = require('body-parser');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+const senhaToken = 'ana2@05';
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -48,17 +52,23 @@ app.get('/users/:id', (req,res) => {
 });
 
 function gerarToken(payload) {
-    const senhaToken = 'ana2@05';
     return jwt.sign(payload, senhaToken, {expiresIn: 20});
+};
+
+function encriptarSenha(senha) {
+    const hash = crypto.createHash('sha256');
+    hash.update(senha + senhaToken);
+    const senhaEncriptada = hash.digest('hex');
+    return senhaEncriptada 
 };
 
 app.post('/login', (req,res) => {
     const loginname = req.body.loginname;
-    const password = req.body.password;
+    const password = encriptarSenha(req.body.password);
     connection.query('SELECT nomeUsuario FROM usuarios WHERE loginName = ? AND password = ?', 
     [loginname, password], (error, rows) => {
         if(error) {
-            console.log('Erro ao processar o comando SQL.', )
+            console.log('Erro ao processar o comando SQL.', error.message)
         }
         else {
             if(rows.length > 0) {
@@ -71,6 +81,24 @@ app.post('/login', (req,res) => {
             }
             
         }        
+    });
+});
+
+app.post('/usuarios', (req,res) => {
+    const noUsuario = req.body.nomeUsuario
+    const loginname = req.body.loginname;
+    const password = encriptarSenha(req.body.password);
+    connection.query('INSERT INTO usuarios (nomeUsuario, loginName, password) VALUES(?,?,?)', 
+    [noUsuario, loginname, password], (error, rows) => {
+        if(error) {
+            console.log('Erro ao processar o comando SQL.', error.message)
+        }
+        
+        else {
+                res.status(201).json({ messageErro: 'Usuário cadastrado com sucesso!' });
+            }
+            
+               
     });
 });
 
