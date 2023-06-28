@@ -3,6 +3,8 @@ const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const crypto = require('crypto');
+//const formidable = require('formidable');
+//const fs = require('fs');
 
 const bodyParser = require('body-parser');
 const { decode } = require('punycode');
@@ -67,7 +69,7 @@ function verificarToken(req, res, next) {
                 return res.status(403).json({mensagemErro: 'Token inválido. Faça login novamente.'})
             }
             else {
-                const usuarioName = decoded.nomeUsuario;
+                const usuarioName = decoded.noUsuario;
                 console.log(`Usuário ${usuarioName} autenticado com sucesso!`);
                 next();
             }
